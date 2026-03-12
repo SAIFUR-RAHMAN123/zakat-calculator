@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ur" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zakat Calculator — زکاۃ کیلکولیٹر</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <!-- ── Rate Modal ── -->
+    <div class="modal" id="rateModal">
+      <div class="modal-box">
+        <div class="modal-title">💹 Sone/Chandi Ka Rate Set Karein</div>
+        <div class="mf">
+          <label>Sone ka Rate (₹ per gram)</label>
+          <input type="number" id="mgr" placeholder="8500" />
+        </div>
+        <div class="mf">
+          <label>Chandi ka Rate (₹ per gram)</label>
+          <input type="number" id="msr" placeholder="92" />
+        </div>
+        <div class="mf" style="background:rgba(27,67,50,0.06);padding:10px;border-radius:8px;font-size:0.75rem;color:#5a4a1a;margin-top:4px;">
+          💡 Google par "gold price today India" search karke latest rate dekhein, phir yahan bharein.
+        </div>
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeModal()">Radd</button>
+          <button class="btn-save" onclick="saveRates()">✓ Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+
+      <!-- ── Header ── -->
+      <div class="header">
+        <div class="arabic-title">زکاۃ کیلکولیٹر</div>
+        <div class="urdu-sub">Zakat Calculator</div>
+        <div class="divider"></div>
+        <div class="tagline">
+          Apni zakatable sampatti darj karein • Nisab ke hisab se 2.5% calculate hogi
+        </div>
+      </div>
+
+      <!-- ── Price Bar ── -->
+      <div class="price-bar">
+        <div class="price-left">
+          <div class="pi">
+            <div class="dot g"></div>
+            Sona: <strong id="grd">₹8,500/g</strong>
+          </div>
+          <div class="pi">
+            <div class="dot s"></div>
+            Chandi: <strong id="srd">₹92/g</strong>
+          </div>
+          <div class="src-label">
+            <div class="pulse"></div>
+            <span id="src-lbl">Approx. rate — edit karein agar alag ho</span>
+          </div>
+        </div>
+        <button class="edit-btn" onclick="openModal()">✏️ Rate Badlein</button>
+      </div>
+
+      <!-- ── Nisab Banner ── -->
+      <div class="nisab-banner">
+        <div class="nb-top">
+          <div class="ni">
+            <div class="nl">Nisab — Sona (85g)</div>
+            <div class="nv" id="ngd">₹7,22,500</div>
+          </div>
+          <div class="nsep"></div>
+          <div class="ni">
+            <div class="nl">Nisab — Chandi (595g)</div>
+            <div class="nv" id="nsd">₹54,740</div>
+          </div>
+          <div class="nsep"></div>
+          <div class="ni">
+            <div class="nl">Zakat Ki Dar</div>
+            <div class="nv">2.5%</div>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-title">⚖️ Milake Nisab Ka Usool (Jumhoor Ulema ke Mutabiq)</div>
+          <div class="rule-text">
+            Agar aapke paas <strong>thoda sona + thodi chandi + kuch naqdiyat</strong> hain —
+            toh sab ko <strong>milakar</strong> ek nisab check hogi. Formula:
+            <strong>(Sona ÷ Sone ka Nisab) + (Chandi ÷ Chandi ka Nisab) + (Baaki Maal ÷ Chandi ka Nisab) ≥ 1</strong>
+            — agar yeh total 1 ke barabar ya zyada ho, toh
+            <strong style="color:#74c69d">Zakat Farz hai</strong>. Calculator automatically yeh check karta hai. ✓
+          </div>
+        </div>
+
+        <div class="loc-bar">
+          📍 <span id="loc-text">Location detect nahi hua</span>
+          <button id="loc-btn" onclick="detectLoc()">📡 Location Lein</button>
+        </div>
+      </div>
+
+      <!-- ── 1. Naqdiyat ── -->
+      <div class="card">
+        <div class="ch">
+          <div class="ci">💵</div>
+          <div>
+            <div class="ct">Naqdiyat aur Bachat</div>
+            <div class="cd">Cash, bank, FD — digital wallets bhi bank mein hi aate hain</div>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="f">
+            <label>Haath mein Cash</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="cash" placeholder="0" min="0" />
+            </div>
+          </div>
+          <div class="f">
+            <label>Bank + Digital Wallets
+              <span class="tw"><i class="ti">i</i>
+                <span class="tb">Savings, Current account, aur sab Digital Wallets (Paytm, PhonePe, Google Pay) milake yahan likhein — yeh sab bank balance ki tarah hai.</span>
+              </span>
+            </label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="bank" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Savings + Current + Paytm/PhonePe/UPI wallets sab milake</span>
+          </div>
+          <div class="f">
+            <label>Fixed Deposits / RD</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="fd" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Maturity ya current value</span>
+          </div>
+          <div class="f">
+            <label>Aur Bachat</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="osav" placeholder="0" min="0" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 2. Sona & Chandi ── -->
+      <div class="card">
+        <div class="ch">
+          <div class="ci">💎</div>
+          <div>
+            <div class="ct">Sona aur Chandi</div>
+            <div class="cd">Wazn likhein → qeemat auto hogi, ya seedha qeemat likhein</div>
+          </div>
+        </div>
+        <div class="metal-tip">
+          💡 <strong>Wazn ya Qeemat — dono mein se sirf ek likhein.</strong>
+          Wazn likhne par upar set rates se qeemat khud bhar jayegi.
+        </div>
+
+        <div class="metal-lbl gold-lbl">🥇 Sona (Gold)</div>
+        <div class="ig" style="margin-bottom:20px">
+          <div class="f">
+            <label>Sone ka Wazn (grams)</label>
+            <div class="iw">
+              <span class="ipfx" style="font-size:0.7rem">g</span>
+              <input type="number" id="gg" placeholder="0" min="0" oninput="syncG('g')" />
+            </div>
+          </div>
+          <div class="f">
+            <label>Ya Sone ki Qeemat (₹)</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="gv" placeholder="0" min="0" oninput="syncG('v')" />
+            </div>
+          </div>
+        </div>
+
+        <div class="metal-lbl silver-lbl">🥈 Chandi (Silver)</div>
+        <div class="ig">
+          <div class="f">
+            <label>Chandi ka Wazn (grams)</label>
+            <div class="iw">
+              <span class="ipfx" style="font-size:0.7rem">g</span>
+              <input type="number" id="sg" placeholder="0" min="0" oninput="syncS('g')" />
+            </div>
+          </div>
+          <div class="f">
+            <label>Ya Chandi ki Qeemat (₹)</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="sv" placeholder="0" min="0" oninput="syncS('v')" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 3. Investments ── -->
+      <div class="card">
+        <div class="ch">
+          <div class="ci">📈</div>
+          <div>
+            <div class="ct">Investments</div>
+            <div class="cd">Stocks, mutual funds, kiraya, aur digar</div>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="f">
+            <label>Shares / Stocks</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="stocks" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Aaj ki market value</span>
+          </div>
+          <div class="f">
+            <label>Mutual Funds</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="mfu" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Current NAV value</span>
+          </div>
+          <div class="f">
+            <label>Kiraya Amdani (Rental)</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="rent" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Saal bhar ki net rental income</span>
+          </div>
+          <div class="f">
+            <label>Digar (Other) Investments
+              <span class="tw"><i class="ti">i</i>
+                <span class="tb">Yahan woh sab likhein jo upar nahi aaye: Sukuk, Bitcoin/Crypto, foreign currency, PPF ka halal hissa, bonds, ya koi aur zakatable asset.</span>
+              </span>
+            </label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="oinv" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Sukuk, crypto, foreign currency, bonds etc.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 4. Business ── -->
+      <div class="card">
+        <div class="ch">
+          <div class="ci">🏪</div>
+          <div>
+            <div class="ct">Business Assets</div>
+            <div class="cd">Maal, qarz, business cash</div>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="f">
+            <label>Business Maal / Inventory</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="inv" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Bechne wala maal — cost price pe</span>
+          </div>
+          <div class="f">
+            <label>Qarz Dena — Wapas Milne Ki Umeed
+              <span class="tw"><i class="ti">i</i>
+                <span class="tb">Sirf woh qarz likhein jis ke wapas milne ka aapko poora yaqeen ho. Mashkook ya bad qarz (jo shayad na mile) include na karein — unpar zakat wajib nahi hoti.</span>
+              </span>
+            </label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="lgiv" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Sirf woh raqam jo yaqeenan wapas milegi</span>
+          </div>
+          <div class="f">
+            <label>Business Cash</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="bcash" placeholder="0" min="0" />
+            </div>
+          </div>
+          <div class="f">
+            <label>Aur Business Assets</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="both" placeholder="0" min="0" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 5. Deductions ── -->
+      <div class="card">
+        <div class="ch">
+          <div class="ci">🔻</div>
+          <div>
+            <div class="ct">Deductions — Ghataiye</div>
+            <div class="cd">Fauran dene wale qarz aur bills minus hote hain</div>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="f">
+            <label>Qarz Lena (Loans Taken)
+              <span class="tw"><i class="ti">i</i>
+                <span class="tb">Sirf immediate/short-term qarz ya is mahine ki due EMI likhein. Pura home loan include na karein — sirf jo abhi dena baaki hai.</span>
+              </span>
+            </label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="ltak" placeholder="0" min="0" />
+            </div>
+          </div>
+          <div class="f">
+            <label>Fauran Dene Wale Bills</label>
+            <div class="iw">
+              <span class="ipfx">₹</span>
+              <input type="number" id="bills" placeholder="0" min="0" />
+            </div>
+            <span class="hint">Is mahine ka rent, bijli, EMI — jo abhi dena baaki</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calc()">✦ Zakat Calculate Karein ✦</button>
+
+      <!-- ── Results Panel ── -->
+      <div id="rp">
+        <div class="rc">
+          <div id="badge" class="rs-badge due">ZAKAT WAJIB HAI ✓</div>
+          <div class="za-lbl">Aapki Zakat Raashi</div>
+          <div class="za" id="zamt">₹0</div>
+          <div class="za-sub" id="nwd">Net Zakatable Wealth: ₹0</div>
+          <div class="rdiv"></div>
+          <div class="bg">
+            <div class="bi">
+              <div class="bl">Kul Sampatti</div>
+              <div class="bv hi" id="ta">₹0</div>
+            </div>
+            <div class="bi">
+              <div class="bl">Kul Deductions</div>
+              <div class="bv" id="td">₹0</div>
+            </div>
+            <div class="bi">
+              <div class="bl">Nisab (Chandi 595g)</div>
+              <div class="bv" id="nth">₹0</div>
+            </div>
+            <div class="bi">
+              <div class="bl">Zakat Ki Dar</div>
+              <div class="bv hi">2.5%</div>
+            </div>
+          </div>
+
+          <!-- Combined nisab breakdown -->
+          <div class="ndb">
+            <div class="ndb-t">⚖️ Milake Nisab Ka Hisaab</div>
+            <div style="font-size:0.7rem;color:rgba(253,246,227,0.4);margin-bottom:10px;letter-spacing:0.3px;">
+              Formula: (Sona <span style="color:var(--gold);font-weight:700">÷</span> Sone ka Nisab)
+              <span style="color:var(--gold-light);font-weight:700;font-size:0.85rem">+</span>
+              (Chandi <span style="color:var(--gold);font-weight:700">÷</span> Chandi ka Nisab)
+              <span style="color:var(--gold-light);font-weight:700;font-size:0.85rem">+</span>
+              (Baaki <span style="color:var(--gold);font-weight:700">÷</span> Chandi ka Nisab)
+              <span style="color:var(--gold-light);font-weight:700;font-size:0.85rem">≥</span> 1
+            </div>
+            <div class="nr">
+              <span>🥇 Sona</span>
+              <span class="v" id="gnp" style="font-family:monospace;font-size:0.82rem">—</span>
+            </div>
+            <div class="nr-formula" id="gnp-formula"></div>
+            <div class="nr">
+              <span>🥈 Chandi</span>
+              <span class="v" id="snp" style="font-family:monospace;font-size:0.82rem">—</span>
+            </div>
+            <div class="nr-formula" id="snp-formula"></div>
+            <div class="nr">
+              <span>💰 Baaki Maal</span>
+              <span class="v" id="onp" style="font-family:monospace;font-size:0.82rem">—</span>
+            </div>
+            <div class="nr-formula" id="onp-formula"></div>
+            <div class="sep2"></div>
+            <div class="nr" style="font-weight:700;font-size:0.9rem">
+              <span>Mila Kar Kul</span><span class="v" id="cnp">—</span>
+            </div>
+            <div class="nr" style="margin-top:6px">
+              <span>Natija</span><span class="v" id="nvrd">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown Table -->
+        <div class="bt">
+          <div class="bth">
+            <div class="btt">📊 Category-wise Breakdown</div>
+            <div style="color:rgba(253,246,227,0.5);font-size:0.75rem">2.5% per category</div>
+          </div>
+          <div id="brows"></div>
+        </div>
+
+        <!-- Installments -->
+        <div class="mc">
+          <div class="mh">📅 Agar Kistón Mein Dena Ho</div>
+          <div class="mg">
+            <div class="mit">
+              <div class="mp">Hafte Mein</div>
+              <div class="ma" id="wa">₹0</div>
+            </div>
+            <div class="mit">
+              <div class="mp">Mahine Mein</div>
+              <div class="ma" id="moa">₹0</div>
+            </div>
+            <div class="mit">
+              <div class="mp">Ramzan (30 din)</div>
+              <div class="ma" id="ra">₹0</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetCalc()">↺ Reset / Dobara Calculate Karein</button>
+      </div>
+
+      <!-- ── History Section ── -->
+      <div class="hist-section" id="hist-section">
+        <div class="hist-header">
+          <div class="hist-title">🕐 Pichhli 5 Calculations (History)</div>
+          <button class="hist-clear" onclick="clearHistory()">🗑 Saaf Karein</button>
+        </div>
+        <div id="hist-body">
+          <div class="hist-empty">Abhi koi history nahi — pehle calculate karein</div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="footer-box">
+        <div class="footer-arabic">یہ کیلکولیٹر صرف رہنمائی کے لیے ہے</div>
+        <div class="footer-urdu">
+          Yeh calculator sirf rehnamai ke liye hai.<br />
+          Aapki zakat ki niyyat mubarak ho. 🤲
+        </div>
+        <div class="footer-scholar">
+          📚 Masail ke liye kisi mufti ya qaabil aalim se rahnumai zaroor lein.
+        </div>
+      </div>
+      <div class="footer-tiny">Zakat Calculator</div>
+
+    </div><!-- /.wrapper -->
+
+    <script src="script.js"></script>
+  </body>
+</html>
